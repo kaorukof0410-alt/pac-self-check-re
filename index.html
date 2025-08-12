@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>PAC 職種自己診断（改良版）｜セールスコンサル or コンサル</title>
+  <style>
+    :root{
+      --bg:#0b1020; --card:#111833; --ink:#e8ecff; --sub:#a8b0d9; --acc:#6ea8ff; --good:#73e2a7; --warn:#ffd166; --sales:#8cc4ff; --consult:#a0e7cf;
+      --shadow:0 20px 40px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.04);
+      --radius:18px;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;background:radial-gradient(1200px 700px at 80% -10%,#1a2a6c00,transparent),linear-gradient(135deg,#0b1020 0%,#0f1530 60%,#0b1020 100%);color:var(--ink);font:16px/1.6 system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,"Noto Sans JP","Hiragino Kaku Gothic ProN","Yu Gothic UI",Meiryo,sans-serif;}
+    .wrap{max-width:980px;margin:32px auto;padding:24px}
+    header{display:flex;gap:16px;align-items:center;margin-bottom:18px}
+    .logo{width:48px;height:48px;border-radius:12px;background:linear-gradient(135deg,#5b8cff,#6ea8ff);display:grid;place-items:center;box-shadow:var(--shadow)}
+    .logo span{font-weight:800;color:#0b1020}
+    h1{font-size:clamp(22px,3.6vw,32px);margin:0}
+    .sub{color:var(--sub)}
+
+    .grid{display:grid;grid-template-columns:1.15fr .85fr;gap:24px}
+    @media (max-width:900px){.grid{grid-template-columns:1fr;}}
+
+    .card{background:linear-gradient(180deg,rgba(255,255,255,.03),rgba(255,255,255,.02));border:1px solid rgba(255,255,255,.08);border-radius:var(--radius);box-shadow:var(--shadow)}
+    .card>.inner{padding:22px}
+
+    .progress{height:10px;background:rgba(255,255,255,.06);border-radius:999px;overflow:hidden}
+    .bar{height:100%;width:0;background:linear-gradient(90deg,var(--acc),#8ed0ff);transition:width .35s ease}
+
+    .q-title{font-size:clamp(18px,2.6vw,22px);font-weight:700;margin:6px 0 14px}
+    .choices{display:flex;gap:12px;flex-wrap:wrap}
+    button{appearance:none;border:0;border-radius:12px;padding:14px 16px;font-weight:700;cursor:pointer;transition:transform .04s ease,filter .2s ease;}
+    button:active{transform:translateY(1px)}
+    .yes{background:linear-gradient(180deg,#4ad2a5,#34c395);color:#0b1020}
+    .no{background:linear-gradient(180deg,#ffd166,#ffbe55);color:#0b1020}
+    .ghost{background:transparent;border:1px solid rgba(255,255,255,.18);color:var(--ink)}
+
+    .pill{display:inline-flex;align-items:center;gap:8px;padding:8px 12px;border-radius:999px;font-weight:700}
+    .pill.sales{background:rgba(110,168,255,.15);border:1px solid rgba(110,168,255,.4);color:#cfe3ff}
+    .pill.consult{background:rgba(115,226,167,.12);border:1px solid rgba(115,226,167,.35);color:#d0ffe9}
+    .list{margin:8px 0 0;padding:0 0 0 18px}
+    .muted{color:var(--sub)}
+    .hl{color:#d7e3ff}
+
+    .result{display:none}
+    .kbd{font:12px/1.4 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;background:rgba(255,255,255,.08);padding:3px 6px;border-radius:6px}
+    footer{margin-top:18px;color:var(--sub);font-size:13px}
+    a.btn{display:inline-block;margin-right:8px}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div class="logo"><span>PAC</span></div>
+      <div>
+        <h1>PAC 職種自己診断（改良版）｜セールスコンサル or コンサル</h1>
+        <div class="sub">直感で答えるだけ。あなたの“向き”が分かる 6 問テスト</div>
+      </div>
+    </header>
+
+    <div class="grid">
+      <!-- Left: Test Card -->
+      <section class="card" aria-live="polite">
+        <div class="inner">
+          <div class="progress" aria-hidden="true"><div class="bar" id="bar"></div></div>
+          <div class="q-title" id="q">読み込み中…</div>
+          <div class="choices">
+            <button class="yes" id="yes">はい</button>
+            <button class="no" id="no">いいえ</button>
+            <button class="ghost" id="back" title="ひとつ前に戻る"><span class="kbd">⌫</span> 戻る</button>
+            <button class="ghost" id="reset" title="最初からやり直す"><span class="kbd">R</span> リセット</button>
+          </div>
+
+          <div class="result" id="result">
+            <p class="muted" id="path"></p>
+            <h2 id="title"></h2>
+            <p id="lead" class="hl"></p>
+            <ul class="list" id="bullets"></ul>
+            <div style="margin-top:14px">
+              <a href="#" class="btn ghost" id="copy">結果をコピー</a>
+              <a href="#" class="btn ghost" id="again">もう一度診断</a>
+            </div>
+          </div>
+
+          <footer>
+            <span>ショートカット: <span class="kbd">Y</span>=はい / <span class="kbd">N</span>=いいえ / <span class="kbd">R</span>=リセット</span>
+          </footer>
+        </div>
+      </section>
+
+      <!-- Right: Reference / Traits -->
+      <aside class="card">
+        <div class="inner">
+          <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:8px">
+            <span class="pill sales">セールスコンサルの特徴</span>
+            <span class="pill consult">コンサルの特徴</span>
+          </div>
+          <div class="sub" style="margin-bottom:10px">迷ったら以下の観点を参考に。</div>
+          <ul class="list">
+            <li><b>セールス</b>：提案力／巻き込み力／行動量／挑戦姿勢。新規～広く届ける0→1。</li>
+            <li><b>コンサル</b>：共感力／深い思考／伴走支援／＋α提案。定着～成果の1→10。</li>
+            <li>どちらも<strong>チーム連携</strong>と<strong>ロジカルな準備</strong>がカギ。</li>
+          </ul>
+        </div>
+      </aside>
+    </div>
+  </div>
+
+  <script>
+    // 質問フロー（改良版）
+    // Q1 -> Q2/Q3 -> Q4 -> Q5(改良) -> Q6 -> 結果
+    const QUESTIONS = {
+      Q1: { text: '新しいお客様と短期間で信頼関係を築き、提案の場で勝負するのがワクワクする？', yes: 'Q2', no: 'Q3' },
+      Q2: { text: '成果が数字（受注件数や売上）としてハッキリ出る方がモチベーションになる？', yes: 'RES_SALES', no: 'Q4' },
+      Q3: { text: '一つの企業と長く関わり、課題を深く掘り下げて解決する方がやりがい？', yes: 'Q4', no: 'Q2' },
+      Q4: { text: '要望を鵜呑みにせず、背景や本質的な目的を掘り下げて提案できる？', yes: 'Q5', no: 'Q2' },
+      Q5: { text: 'ゴールまでの道筋を自分で設計し、関係者を巻き込みながらプロジェクトを動かすのが得意？', yes: 'Q6', no: 'Q2' },
+      Q6: { text: '短期的な成果よりも、中長期的な成果や仕組みの改善にやりがいを感じる？', yes: 'RES_CONSULT', no: 'RES_SALES' },
+    };
+
+    // 結果テンプレ
+    const RESULTS = {
+      RES_SALES: {
+        title: 'あなたは「セールスコンサル向き」',
+        lead: '行動量 × 提案力で価値を“届ける”タイプ。受注の瞬間にワクワクできる人。',
+        bullets: [
+          '顧客ごとに提案を変えるのが得意（コンサル型営業）',
+          '周囲を巻き込んでスピーディに動ける',
+          '数字の手応えが原動力になる',
+        ],
+        pill: 'sales'
+      },
+      RES_CONSULT: {
+        title: 'あなたは「コンサル向き」',
+        lead: '伴走しながら“価値を根付かせる”タイプ。課題の深掘りと改善設計が強み。',
+        bullets: [
+          '長期的に顧客と関係を築くのが好き',
+          'データや運用設計で成果に繋げるのが得意',
+          '＋αの提案で価値を広げられる',
+        ],
+        pill: 'consult'
+      }
+    };
+
+    const bar = document.getElementById('bar');
+    const qEl = document.getElementById('q');
+    const yesBtn = document.getElementById('yes');
+    const noBtn = document.getElementById('no');
+    const backBtn = document.getElementById('back');
+    const resetBtn = document.getElementById('reset');
+    const resBox = document.getElementById('result');
+    const resTitle = document.getElementById('title');
+    const resLead = document.getElementById('lead');
+    const resBullets = document.getElementById('bullets');
+    const resPath = document.getElementById('path');
+    const again = document.getElementById('again');
+    const copyBtn = document.getElementById('copy');
+
+    let stack = []; // history of node ids
+    let current = 'Q1';
+
+    function setProgress() {
+      const answered = stack.filter(id=>/^Q/.test(id)).length;
+      const total = 6; // Q1..Q6
+      const pct = Math.min(100, Math.round((answered/total)*100));
+      bar.style.width = pct + '%';
+    }
+
+    function renderNode(id) {
+      current = id;
+      setProgress();
+
+      if (id.startsWith('RES_')) {
+        const result = RESULTS[id];
+        qEl.style.display = 'none';
+        yesBtn.style.display = 'none';
+        noBtn.style.display = 'none';
+        resBox.style.display = 'block';
+
+        resTitle.textContent = result.title;
+        resLead.textContent = result.lead;
+        resBullets.innerHTML = result.bullets.map(x=>`<li>${x}</li>`).join('');
+        resPath.textContent = `あなたの回答ルート： ${stack.join(' → ')} → 結果`;
+      } else {
+        qEl.style.display = 'block';
+        yesBtn.style.display = 'inline-block';
+        noBtn.style.display = 'inline-block';
+        resBox.style.display = 'none';
+        qEl.textContent = QUESTIONS[id].text;
+      }
+
+      backBtn.style.display = stack.length ? 'inline-block' : 'none';
+    }
+
+    function answer(yn){
+      const node = QUESTIONS[current];
+      const next = yn==='yes' ? node.yes : node.no;
+      stack.push(current + '(' + (yn==='yes'?'はい':'いいえ') + ')');
+      renderNode(next);
+    }
+
+    function back(){
+      while(stack.length){
+        stack.pop();
+        const prev = stack.length ? stack[stack.length-1].split('(')[0] : null;
+        renderNode(prev || 'Q1');
+        break;
+      }
+    }
+
+    function reset(){ stack = []; renderNode('Q1'); }
+
+    yesBtn.addEventListener('click', ()=>answer('yes'));
+    noBtn.addEventListener('click', ()=>answer('no'));
+    backBtn.addEventListener('click', back);
+    resetBtn.addEventListener('click', reset);
+    again.addEventListener('click', (e)=>{e.preventDefault(); reset();});
+
+    copyBtn.addEventListener('click', (e)=>{
+      e.preventDefault();
+      const text = `${resTitle.textContent}\n${resLead.textContent}\n- ${Array.from(resBullets.children).map(li=>li.textContent).join('\n- ')}\n${resPath.textContent}`;
+      navigator.clipboard.writeText(text).then(()=>{
+        copyBtn.textContent = 'コピーしました！';
+        setTimeout(()=>copyBtn.textContent='結果をコピー',1200);
+      });
+    });
+
+    document.addEventListener('keydown', (e)=>{
+      if (e.key.toLowerCase()==='y') answer('yes');
+      if (e.key.toLowerCase()==='n') answer('no');
+      if (e.key==='Backspace') back();
+      if (e.key.toLowerCase()==='r') reset();
+    });
+
+    // init
+    renderNode('Q1');
+  </script>
+</body>
+</html>
